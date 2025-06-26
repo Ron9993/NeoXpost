@@ -1,0 +1,11 @@
+
+[project]
+name = "neoxchange-telegram-bot"
+version = "0.1.0"
+description = "Multilingual Telegram bot for NeoXchange crypto trading platform"
+authors = ["Your Name <you@example.com>"]
+requires-python = ">=3.11"
+dependencies = [
+    "python-telegram-bot[ext]==20.7",
+    "python-dotenv>=1.0.0",
+]
