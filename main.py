@@ -200,7 +200,7 @@ The bot supports English 🇬🇧, Burmese 🇲🇲, and Chinese 🇨🇳
     """
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
-async def main():
+def main():
     """Start the bot"""
     if not BOT_TOKEN:
         print("❌ TELEGRAM_BOT_TOKEN not found in environment variables.")
@@ -222,15 +222,17 @@ async def main():
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CallbackQueryHandler(button_handler))
     
-    # Set up command menu
-    await setup_commands(application)
+    # Set up command menu using job queue
+    async def setup_on_startup(application):
+        await setup_commands(application)
+        print("✅ Command menu has been set up.")
+    
+    application.job_queue.run_once(lambda context: setup_on_startup(application), when=1)
     
     # Start the bot
     print("✅ Bot is running! Use /start to test the message.")
     print("✅ Use /post to send the message to your channel.")
-    print("✅ Command menu has been set up.")
     application.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    main()
