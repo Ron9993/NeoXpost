@@ -1,13 +1,9 @@
 
 import logging
 import os
-import nest_asyncio
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
-
-# Apply nest_asyncio to allow nested event loops
-nest_asyncio.apply()
 
 # Load environment variables from .env file
 load_dotenv()
@@ -217,7 +213,7 @@ async def error_handler(update, context):
     """Handle errors"""
     print(f"Update {update} caused error {context.error}")
 
-async def main():
+def main():
     """Start the bot"""
     if not BOT_TOKEN:
         print("❌ TELEGRAM_BOT_TOKEN not found in environment variables.")
@@ -242,14 +238,6 @@ async def main():
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CallbackQueryHandler(button_handler))
     
-    # Set up command menu with error handling
-    try:
-        await setup_commands(application)
-        print("✅ Command menu has been set up.")
-    except Exception as e:
-        print(f"⚠️ Failed to set up command menu (rate limited): {e}")
-        print("Commands will still work, just won't appear in menu immediately.")
-    
     # Start the bot
     print("✅ Bot is running! Use /start to test the message.")
     print("✅ Use /post to send the message to your channel.")
@@ -258,5 +246,4 @@ async def main():
     application.run_polling(poll_interval=2.0, timeout=10)
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    main()
