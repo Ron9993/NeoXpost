@@ -1,7 +1,12 @@
 
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import os
+from dotenv import load_dotenv
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -9,11 +14,11 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Bot token and channel configuration
-BOT_TOKEN = '8037037101:AAGUgIZSRRyGagqKlqt2VMlv8TSdiRBZtzI'
-CHANNEL_ID = '@neoxchange88'  # Your channel ID
-NEOXBOT_USERNAME = '@NeoXchange_bot'  # Your NeoXchange bot username
-CRYPTO_SHOP_CHANNEL = '@cryptoaccess88'  # Your crypto accessories channel
+# Bot token and channel configuration from environment variables
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '@neoxchange88')
+NEOXBOT_USERNAME = os.getenv('NEOXBOT_USERNAME', '@NeoXchange_bot')
+CRYPTO_SHOP_CHANNEL = os.getenv('CRYPTO_SHOP_CHANNEL', '@cryptoaccess88')
 
 # Multilingual content
 MESSAGES = {
@@ -140,28 +145,62 @@ async def button_handler(update, context):
             parse_mode='HTML'
         )
 
+async def setup_commands(application):
+    """Set up the bot command menu"""
+    commands = [
+        BotCommand("start", "🚀 Show NeoXchange welcome message with language options"),
+        BotCommand("post", "📢 Post message to your configured channel"),
+        BotCommand("help", "❓ Show help and setup instructions"),
+        BotCommand("menu", "📋 Show all available commands")
+    ]
+    
+    await application.bot.set_my_commands(commands)
+
+async def menu_command(update, context):
+    """Show bot menu with all commands"""
+    menu_text = """
+🤖 **NeoXchange Bot Menu**
+
+🚀 /start - Show welcome message with language options
+📢 /post - Post message to channel
+❓ /help - Show detailed help and setup
+📋 /menu - Show this command menu
+
+💡 **Quick Actions:**
+• Use /start to see the multilingual NeoXchange message
+• Use /post to share it on your channel
+• Change language using the inline buttons
+    """
+    await update.message.reply_text(menu_text, parse_mode='Markdown')
+
 async def help_command(update, context):
     """Show help information"""
     help_text = """
-🤖 NeoXchange Bot Commands:
+🤖 **NeoXchange Bot Help**
 
-/start - Show the main NeoXchange message with language options
-/post - Post the message to your configured channel
-/help - Show this help message
+**Available Commands:**
+🚀 /start - Show the main NeoXchange message with language options
+📢 /post - Post the message to your configured channel
+❓ /help - Show this help message
+📋 /menu - Show command menu
 
-📝 Setup Instructions:
+**📝 Setup Instructions:**
 1. Set TELEGRAM_BOT_TOKEN in Secrets
 2. Set TELEGRAM_CHANNEL_ID in Secrets (e.g., @yourchannel)
-3. Set CRYPTO_SHOP_CHANNEL in Secrets (optional, defaults to @cryptoshop)
+3. Set CRYPTO_SHOP_CHANNEL in Secrets (optional, defaults to @cryptoaccess88)
+4. Set NEOXBOT_USERNAME in Secrets (optional, defaults to @NeoXchange_bot)
 
-🔧 Configuration:
-- Edit NEOXBOT_USERNAME variable in the code to match your NeoXchange bot
-- Customize messages in the MESSAGES dictionary
-- Modify inline buttons in get_inline_keyboard function
+**🔧 Configuration:**
+• All configuration is now done through environment variables/Secrets
+• Customize messages in the MESSAGES dictionary
+• Modify inline buttons in get_inline_keyboard function
+
+**🌐 Language Support:**
+The bot supports English 🇬🇧, Burmese 🇲🇲, and Chinese 🇨🇳
     """
-    await update.message.reply_text(help_text)
+    await update.message.reply_text(help_text, parse_mode='Markdown')
 
-def main():
+async def main():
     """Start the bot"""
     if not BOT_TOKEN:
         print("❌ TELEGRAM_BOT_TOKEN not found in environment variables.")
@@ -169,6 +208,9 @@ def main():
         return
     
     print("🚀 Starting NeoXchange Telegram Bot...")
+    print(f"📡 Channel ID: {CHANNEL_ID}")
+    print(f"🤖 NeoX Bot: {NEOXBOT_USERNAME}")
+    print(f"🛒 Crypto Shop: {CRYPTO_SHOP_CHANNEL}")
     
     # Create application
     application = Application.builder().token(BOT_TOKEN).build()
@@ -177,12 +219,18 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("post", post_to_channel))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CallbackQueryHandler(button_handler))
+    
+    # Set up command menu
+    await setup_commands(application)
     
     # Start the bot
     print("✅ Bot is running! Use /start to test the message.")
     print("✅ Use /post to send the message to your channel.")
+    print("✅ Command menu has been set up.")
     application.run_polling()
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())
