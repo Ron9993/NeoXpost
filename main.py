@@ -242,20 +242,21 @@ async def main():
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CallbackQueryHandler(button_handler))
     
-    # Set up command menu using job queue
-    async def setup_on_startup(application):
+    # Set up command menu with error handling
+    try:
         await setup_commands(application)
         print("✅ Command menu has been set up.")
-    
-    application.job_queue.run_once(lambda context: setup_on_startup(application), when=1)
+    except Exception as e:
+        print(f"⚠️ Failed to set up command menu (rate limited): {e}")
+        print("Commands will still work, just won't appear in menu immediately.")
     
     # Start the bot
     print("✅ Bot is running! Use /start to test the message.")
     print("✅ Use /post to send the message to your channel.")
     
-    # Use faster polling for better callback query responsiveness
-    application.run_polling(poll_interval=1.0)  # Check for updates every second for better responsiveness
+    # Use slower polling to avoid rate limits
+    application.run_polling(poll_interval=2.0, timeout=10)
 
 if __name__ == '__main__':
     import asyncio
-    asyncio.get_event_loop().run_until_complete(main())
+    asyncio.run(main())
