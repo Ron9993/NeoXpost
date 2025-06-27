@@ -1,9 +1,13 @@
 
 import logging
 import os
+import nest_asyncio
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
+
+# Apply nest_asyncio to allow nested event loops
+nest_asyncio.apply()
 
 # Load environment variables from .env file
 load_dotenv()
@@ -213,7 +217,7 @@ async def error_handler(update, context):
     """Handle errors"""
     print(f"Update {update} caused error {context.error}")
 
-def main():
+async def main():
     """Start the bot"""
     if not BOT_TOKEN:
         print("❌ TELEGRAM_BOT_TOKEN not found in environment variables.")
@@ -253,4 +257,5 @@ def main():
     application.run_polling(poll_interval=1.0)  # Check for updates every second for better responsiveness
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.get_event_loop().run_until_complete(main())
