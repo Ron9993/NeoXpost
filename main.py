@@ -132,18 +132,27 @@ async def post_to_channel(update, context):
 async def button_handler(update, context):
     """Handle inline button callbacks"""
     query = update.callback_query
-    await query.answer()
+    
+    # Answer the callback query immediately to prevent timeout
+    try:
+        await query.answer()
+    except Exception as e:
+        # If answering fails (e.g., query too old), just log and continue
+        print(f"Failed to answer callback query: {e}")
     
     if query.data.startswith('lang_'):
         lang = query.data.replace('lang_', '')
         message = format_message(lang)
         keyboard = get_inline_keyboard(lang)
         
-        await query.edit_message_text(
-            text=message,
-            reply_markup=keyboard,
-            parse_mode='HTML'
-        )
+        try:
+            await query.edit_message_text(
+                text=message,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            print(f"Failed to edit message: {e}")
 
 async def setup_commands(application):
     """Set up the bot command menu"""
@@ -200,6 +209,10 @@ The bot supports English 🇬🇧, Burmese 🇲🇲, and Chinese 🇨🇳
     """
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
+async def error_handler(update, context):
+    """Handle errors"""
+    print(f"Update {update} caused error {context.error}")
+
 def main():
     """Start the bot"""
     if not BOT_TOKEN:
@@ -214,6 +227,9 @@ def main():
     
     # Create application
     application = Application.builder().token(BOT_TOKEN).build()
+    
+    # Add error handler
+    application.add_error_handler(error_handler)
     
     # Add handlers
     application.add_handler(CommandHandler("start", start))
@@ -233,8 +249,8 @@ def main():
     print("✅ Bot is running! Use /start to test the message.")
     print("✅ Use /post to send the message to your channel.")
     
-    # Configure polling with longer intervals to reduce API calls
-    application.run_polling(poll_interval=30.0)  # Check for updates every 30 seconds instead of default 1 second
+    # Use faster polling for better callback query responsiveness
+    application.run_polling(poll_interval=1.0)  # Check for updates every second for better responsiveness
 
 if __name__ == '__main__':
     main()
