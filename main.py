@@ -232,7 +232,9 @@ def main():
     # Start the bot
     print("✅ Bot is running! Use /start to test the message.")
     print("✅ Use /post to send the message to your channel.")
-    application.run_polling()
+    
+    # Configure polling with longer intervals to reduce API calls
+    application.run_polling(poll_interval=30.0)  # Check for updates every 30 seconds instead of default 1 second
 
 if __name__ == '__main__':
     main()
